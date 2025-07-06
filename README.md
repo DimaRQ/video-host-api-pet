@@ -53,20 +53,16 @@
 
 ## Быстрый старт
 ```bash
-# Клонирование проекта и установка зависимостей
-git clone http://
-cd ...
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+# Клонирование проекта
+git clone https://github.com/DimaRQ/video-host-api-pet.git
+cd video-host-api-pet
 
 # Настраиваем .env
 mv .env-example .env
 nano .env
 
-# Миграция бд и запуск проекта
-alembic upgrade head
-uvicorn main:app
+# Запуск докера
+docker compose up --build
 ```
 
 
@@ -87,4 +83,4 @@ pytest -q
 
 ## TODO
 - [X] CI/CD
-- [ ] Docker
+- [X] Docker

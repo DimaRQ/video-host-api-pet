@@ -13,6 +13,9 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
+    uvicorn_host: str = Field("localhost", alias="UVICORN_HOST")
+    uvicorn_port: int = Field(8000, alias="UVICORN_PORT")
+
     database_url: str = Field(..., alias="DATABASE_URL")
     kafka_servers: List[str] = Field(..., alias="KAFKA_SERVERS")
     kafka_topic: str = Field("videos", alias="KAFKA_TOPIC")

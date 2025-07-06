@@ -82,7 +82,7 @@ async def ban_ip_middleware(request: Request, call_next):
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host="localhost",
-        port=8000,
+        host=settings.uvicorn_host,
+        port=settings.uvicorn_port,
         reload=settings.app_debug
     )
