@@ -79,8 +79,3 @@ docker compose up --build
 
 ## Тестирование 
 pytest -q
-
-
-## TODO
-- [X] CI/CD
-- [X] Docker
