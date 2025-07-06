@@ -20,24 +20,17 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
         400: {"description": "Login already exists"},
     },
 )
-async def register_user(
-        data: schemas.AuthRegister,
-        db: AsyncSession = Depends(get_db)
-):
+async def register_user(data: schemas.AuthRegister, db: AsyncSession = Depends(get_db)):
     # Register new user
-    existing = (await db.execute(
-        select(User).where(User.login == data.login)
-    )).scalar_one_or_none()
+    existing = (
+        await db.execute(select(User).where(User.login == data.login))
+    ).scalar_one_or_none()
     if existing:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Login already exists"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Login already exists"
         )
 
-    new_user = User(
-        login=data.login,
-        hashed_password=get_password_hash(data.password)
-    )
+    new_user = User(login=data.login, hashed_password=get_password_hash(data.password))
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
@@ -55,14 +48,9 @@ async def register_user(
         404: {"description": "Incorrect login or password"},
     },
 )
-async def login_user(
-        data: schemas.UserLogin,
-        db: AsyncSession = Depends(get_db)
-):
+async def login_user(data: schemas.UserLogin, db: AsyncSession = Depends(get_db)):
     # Generate JWT token for upload video
-    q = await db.execute(
-        select(User).where(User.login == data.login)
-    )
+    q = await db.execute(select(User).where(User.login == data.login))
     user = q.scalar_one_or_none()
 
     if not user or not verify_password(data.password, user.hashed_password):
@@ -71,7 +59,5 @@ async def login_user(
             detail="Incorrect login or password",
         )
 
-    token = create_access_token(
-        {"user_id": user.id, "login": user.login}
-    )
+    token = create_access_token({"user_id": user.id, "login": user.login})
     return {"access_token": token, "token_type": "bearer"}

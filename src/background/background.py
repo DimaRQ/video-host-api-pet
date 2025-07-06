@@ -29,8 +29,8 @@ class S3UploadWorker:
             async for msg in self.kafka_consumer.consumer:
                 try:
                     payload = msg.value
-                    video_id = payload.get('id')
-                    local_path = payload.get('path')
+                    video_id = payload.get("id")
+                    local_path = payload.get("path")
                     if not os.path.exists(local_path):
                         continue
 
@@ -45,9 +45,7 @@ class S3UploadWorker:
 
                         async with get_s3_client() as s3:
                             await s3.upload_file(
-                                Filename=local_path,
-                                Bucket=self.bucket,
-                                Key=key
+                                Filename=local_path, Bucket=self.bucket, Key=key
                             )
                         s3_url = f"{settings.S3_BASEURL}/{self.bucket}/{key}"
                         logger.info(f"Video {video_id} upload to {s3_url}")

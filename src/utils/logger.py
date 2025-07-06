@@ -2,7 +2,9 @@ import logging
 import sys
 from logging import Logger
 
-LOG_FORMAT = "%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s"
+LOG_FORMAT = (
+    "%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s"
+)
 LOG_FILE = "log.log"
 
 

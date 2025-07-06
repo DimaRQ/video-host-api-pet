@@ -30,7 +30,7 @@ def get_password_hash(password: str) -> str:
 
 
 def create_access_token(
-        data: Dict[str, Any], expires_delta: Optional[timedelta] = None
+    data: Dict[str, Any], expires_delta: Optional[timedelta] = None
 ) -> str:
     """
     Generate access token
@@ -40,13 +40,11 @@ def create_access_token(
     """
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + (
-            expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
+        expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
     )
     to_encode.update({"exp": expire})
     token = jwt.encode(
-        to_encode,
-        settings.secret_key.get_secret_value(),
-        algorithm=settings.algorithm
+        to_encode, settings.secret_key.get_secret_value(), algorithm=settings.algorithm
     )
     return token
 
@@ -57,5 +55,7 @@ def decode_access_token(token: str) -> Dict[str, Any]:
     :param token:
     :return:
     """
-    payload = jwt.decode(token, settings.secret_key.get_secret_value(), algorithms=[settings.algorithm])
+    payload = jwt.decode(
+        token, settings.secret_key.get_secret_value(), algorithms=[settings.algorithm]
+    )
     return payload

@@ -8,7 +8,7 @@ settings = get_settings()
 config = Config(
     region_name=settings.s3_region,
     signature_version="s3v4",
-    s3={'addressing_style': 'path'}
+    s3={"addressing_style": "path"},
 )
 
 
@@ -22,5 +22,5 @@ def get_s3_client() -> aioboto3.Session.client:
         endpoint_url=settings.s3_endpoint or settings.s3_baseurl,
         aws_access_key_id=settings.s3_access_key,
         aws_secret_access_key=settings.s3_secret_key,
-        config=config
+        config=config,
     )

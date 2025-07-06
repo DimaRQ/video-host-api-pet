@@ -12,8 +12,8 @@ bearer_scheme = HTTPBearer()
 
 
 async def get_current_user(
-        credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-        db: AsyncSession = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    db: AsyncSession = Depends(get_db),
 ) -> models.User:
     token = credentials.credentials
     credentials_exception = HTTPException(

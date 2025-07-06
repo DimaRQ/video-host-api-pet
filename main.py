@@ -21,15 +21,11 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI):
     # Init redis, start producer and consumer
     app.state.redis = redis.Redis(
-        host=settings.redis_host,
-        port=settings.redis_port,
-        decode_responses=True
+        host=settings.redis_host, port=settings.redis_port, decode_responses=True
     )
     await kafka_producer.start()
     background_worker = asyncio.create_task(
-        S3UploadWorker(
-            bucket=settings.s3_bucket
-        ).start()
+        S3UploadWorker(bucket=settings.s3_bucket).start()
     )
     yield
     await kafka_producer.stop()
@@ -53,7 +49,7 @@ async def ban_ip_middleware(request: Request, call_next):
         ttl = await redis_client.ttl(banned_key)
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
-            content={"detail": f"IP is temporarily blocked for {ttl} seconds."}
+            content={"detail": f"IP is temporarily blocked for {ttl} seconds."},
         )
 
     request_count = await redis_client.incr(rate_key)
@@ -64,7 +60,7 @@ async def ban_ip_middleware(request: Request, call_next):
         await redis_client.set(banned_key, 1, ex=settings.redis_ip_ban_time * 60)
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many requests, IP temporarily blocked."
+            detail="Too many requests, IP temporarily blocked.",
         )
 
     try:
@@ -73,7 +69,7 @@ async def ban_ip_middleware(request: Request, call_next):
         logger.exception(f"Internal server error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error"
+            detail="Internal server error",
         )
 
     return response
@@ -84,5 +80,5 @@ if __name__ == "__main__":
         "main:app",
         host=settings.uvicorn_host,
         port=settings.uvicorn_port,
-        reload=settings.app_debug
+        reload=settings.app_debug,
     )

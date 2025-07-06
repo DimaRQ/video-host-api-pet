@@ -3,7 +3,16 @@ import os
 import tempfile
 
 import aiofiles
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, status, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    status,
+    UploadFile,
+)
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -37,18 +46,17 @@ logger = get_logger(__name__)
     },
 )
 async def upload_video(
-        name: str = Form(..., description="Video title"),
-        description: str = Form(..., description="Video description"),
-        file: UploadFile = File(..., description="MP4 file"),
-        current_user: User = Depends(get_current_user),
-        db: AsyncSession = Depends(get_db)
+    name: str = Form(..., description="Video title"),
+    description: str = Form(..., description="Video description"),
+    file: UploadFile = File(..., description="MP4 file"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Save uploaded video and enqueue background upload task."""
     # Download file and create message in kafka
     if file.content_type != "video/mp4":
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="mp4 files only"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="mp4 files only"
         )
 
     # Store file in system temporary directory
@@ -74,8 +82,7 @@ async def upload_video(
     if not is_mp4(tmp_path):
         os.remove(tmp_path)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="mp4 files only"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="mp4 files only"
         )
 
     new_video = Video(
@@ -87,13 +94,15 @@ async def upload_video(
     await db.flush()
 
     payload = {
-        'id': new_video.id,
-        'name': name,
-        'description': description,
-        'path': tmp_path
+        "id": new_video.id,
+        "name": name,
+        "description": description,
+        "path": tmp_path,
     }
 
-    await kafka_producer.producer.send("videos", value=json.dumps(payload).encode("utf-8"))
+    await kafka_producer.producer.send(
+        "videos", value=json.dumps(payload).encode("utf-8")
+    )
     await kafka_producer.producer.flush()
 
     return {"id": new_video.id, "status": "accepted"}
@@ -108,9 +117,7 @@ async def upload_video(
     },
 )
 async def get_video_player(
-        request: Request,
-        video_id: int,
-        db: AsyncSession = Depends(get_db)
+    request: Request, video_id: int, db: AsyncSession = Depends(get_db)
 ):
     """Return simple HTML player for the requested video."""
     # Get simple html with video player
@@ -120,15 +127,14 @@ async def get_video_player(
         video = result.scalar_one()
     except NoResultFound:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video not found"
         )
 
     async with get_s3_client() as s3:
         url = await s3.generate_presigned_url(
             ClientMethod="get_object",
             Params={"Bucket": settings.s3_bucket, "Key": video.key},
-            ExpiresIn=3600
+            ExpiresIn=3600,
         )
 
     return templates.TemplateResponse("player.html", {"request": request, "url": url})
@@ -144,10 +150,7 @@ async def get_video_player(
         404: {"description": "Video not found"},
     },
 )
-async def get_video_upload_status(
-        video_id: int,
-        db: AsyncSession = Depends(get_db)
-):
+async def get_video_upload_status(video_id: int, db: AsyncSession = Depends(get_db)):
     """Return upload status for video."""
     # Get video upload status
     stmt = select(Video).filter(Video.id == video_id)
@@ -156,12 +159,11 @@ async def get_video_upload_status(
         video = result.scalar_one()
         return {
             "id": video.id,
-            "status": "accepted" if not video.s3_url else "uploaded"
+            "status": "accepted" if not video.s3_url else "uploaded",
         }
     except NoResultFound:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video not found"
         )
 
 
@@ -176,9 +178,9 @@ async def get_video_upload_status(
     },
 )
 async def delete_video(
-        video_id: int,
-        current_user: User = Depends(get_current_user),
-        db: AsyncSession = Depends(get_db)
+    video_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """Remove video from DB and S3 if it exists."""
     # Delete video from db and S3
@@ -188,23 +190,18 @@ async def delete_video(
         video = result.scalar_one()
     except NoResultFound:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Video not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Video not found"
         )
 
     if video.user_id != current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied"
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
 
     await db.delete(video)
 
     if video.key:
         async with get_s3_client() as s3:
-            await s3.delete_object(
-                Bucket=settings.s3_bucket,
-                Key=video.key
-            )
+            await s3.delete_object(Bucket=settings.s3_bucket, Key=video.key)
 
     return {"status": "success"}
