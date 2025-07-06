@@ -86,5 +86,5 @@ pytest -q
 
 
 ## TODO
-- [ ] CI/CD
+- [X] CI/CD
 - [ ] Docker
